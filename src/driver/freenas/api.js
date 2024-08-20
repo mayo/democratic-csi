@@ -2016,7 +2016,25 @@ class FreeNASApiDriver extends CsiBaseDriver {
     return datasetParentName;
   }
 
+  async getClient() {
+    return registry.get(`${__REGISTRY_NS__}:http_client`, () => {
+      const client = new HttpClient(this.options.httpConnection);
+      client.logger = this.ctx.logger;
+      client.setApiVersion(2); // requires version 2
+      return client;
+    });
+  }
+
   async getHttpClient() {
+    return registry.get(`${__REGISTRY_NS__}:http_client`, () => {
+      const client = new HttpClient(this.options.httpConnection);
+      client.logger = this.ctx.logger;
+      client.setApiVersion(2); // requires version 2
+      return client;
+    });
+  }
+
+  async getHttpsClient() {
     return registry.get(`${__REGISTRY_NS__}:http_client`, () => {
       const client = new HttpClient(this.options.httpConnection);
       client.logger = this.ctx.logger;
@@ -2035,8 +2053,15 @@ class FreeNASApiDriver extends CsiBaseDriver {
 
   async getTrueNASHttpApiClient() {
     return registry.getAsync(`${__REGISTRY_NS__}:api_client`, async () => {
-      const httpClient = await this.getHttpClient();
-      return new TrueNASApiClient(httpClient, this.ctx.cache);
+      
+      if (this.options.httpConnection.protocol = "https") {
+        const httpsClient = await this.getHttpsClient();
+        return new TrueNASApiClient(httpsClient, this.ctx.cache);
+
+      } else {
+        const httpClient = await this.getHttpClient();
+        return new TrueNASApiClient(httpClient, this.ctx.cache);
+      }
     });
   }
 
